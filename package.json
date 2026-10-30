@@ -1,0 +1,27 @@
+{
+  "name": "angiang-shipping-management",
+  "version": "1.0.0",
+  "description": "Hệ thống quản trị vận tải biển và dịch vụ cảng - Công ty Cổ phần Vận tải Biển An Giang",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "shipping",
+    "management",
+    "express",
+    "nodejs",
+    "tailwind"
+  ],
+  "author": "Nguyễn Ngọc Diệp",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2",
+    "pg": "^8.23.1",
+    "sqlite3": "^6.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

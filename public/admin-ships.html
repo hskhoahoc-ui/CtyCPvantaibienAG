@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Tàu & Đội Tàu - VẬN TẢI BIỂN AN GIANG</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { brandBlue: '#005baa', brandRed: '#e31b23', ocean: { 500: '#0284c7', 800: '#075985', 900: '#0c4a6e' } }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+        body { font-family: 'Roboto', sans-serif; background-color: #f3f4f6; }
+        .tab-btn.active { background-color: #005baa; color: white; font-weight: bold; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <header class="bg-white shadow border-b sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <a href="dashboard.html" class="text-brandBlue text-xl font-bold flex items-center hover:opacity-80">
+                    <i class="fas fa-chevron-left mr-2"></i> Trở Về Hub
+                </a>
+                <span class="text-gray-300">|</span>
+                <h1 class="text-lg font-bold text-gray-800">Phân Hệ Quản Lý Tàu & Đội Tàu</h1>
+            </div>
+            <a href="dashboard.html" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded text-xs font-bold transition">
+                <i class="fas fa-home mr-1"></i> Dashboard
+            </a>
+        </div>
+
+        <nav class="bg-gray-900 text-white text-sm border-t border-gray-800">
+            <div class="max-w-7xl mx-auto px-4 flex space-x-1 py-1 overflow-x-auto whitespace-nowrap">
+                <button type="button" onclick="switchTab('ships')" id="btn-tab-ships" class="tab-btn active px-3 py-2 rounded transition">
+                    <i class="fas fa-ship mr-1"></i> Quản Lý Tàu
+                </button>
+                <button type="button" onclick="switchTab('maintenance')" id="btn-tab-maintenance" class="tab-btn px-3 py-2 rounded transition">
+                    <i class="fas fa-tools mr-1"></i> Bảo Dưỡng Tàu
+                </button>
+                <button type="button" onclick="switchTab('crew')" id="btn-tab-crew" class="tab-btn px-3 py-2 rounded transition">
+                    <i class="fas fa-id-badge mr-1"></i> Thủy Thủ & Nhân Sự
+                </button>
+                <button type="button" onclick="switchTab('assets')" id="btn-tab-assets" class="tab-btn px-3 py-2 rounded transition">
+                    <i class="fas fa-boxes mr-1"></i> Tài Sản Trên Tàu
+                </button>
+                <button type="button" onclick="switchTab('materials')" id="btn-tab-materials" class="tab-btn px-3 py-2 rounded transition">
+                    <i class="fas fa-gas-pump mr-1"></i> Nguyên / Vật Liệu
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full">
+        
+        <!-- TAB 1: QUẢN LÝ TÀU -->
+        <div id="tab-ships" class="tab-content">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Form Thêm/Sửa Tàu -->
+                <div class="lg:col-span-4 bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                    <div class="flex justify-between items-center mb-4 pb-2 border-b">
+                        <h3 id="vesselFormTitle" class="font-bold text-gray-800 text-sm"><i class="fas fa-plus-circle text-brandBlue mr-1"></i> Thêm Tàu Mới</h3>
+                        <button type="button" onclick="resetVesselForm()" class="text-xs text-gray-400 underline">Làm mới</button>
+                    </div>
+                    <form id="vesselForm" onsubmit="saveVessel(event)" class="space-y-3 text-xs">
+                        <input type="hidden" id="vesselEditId">
+                        <div><label class="block font-semibold mb-1">Tên tàu *</label><input type="text" id="vesselName" required class="w-full p-2.5 border rounded-lg"></div>
+                        <div><label class="block font-semibold mb-1">Số hiệu tàu (IMO) *</label><input type="text" id="vesselCode" required class="w-full p-2.5 border rounded-lg"></div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div><label class="block font-semibold mb-1">Trọng tải (DWT) *</label><input type="number" id="vesselDwt" required class="w-full p-2.5 border rounded-lg"></div>
+                            <div><label class="block font-semibold mb-1">Trị giá tàu</label><input type="text" id="vesselValue" class="w-full p-2.5 border rounded-lg"></div>
+                        </div>
+                        <div><label class="block font-semibold mb-1">Thời gian mua / thuê</label><input type="date" id="vesselDate" class="w-full p-2.5 border rounded-lg"></div>
+                        <div><label class="block font-semibold mb-1">Giấy phép 1 (Đăng kiểm)</label><input type="text" id="vesselLicense1" class="w-full p-2.5 border rounded-lg"></div>
+                        <div><label class="block font-semibold mb-1">Giấy phép 2 (An toàn)</label><input type="text" id="vesselLicense2" class="w-full p-2.5 border rounded-lg"></div>
+                        <div><label class="block font-semibold mb-1">Giấy phép 3 (Xuất cảng)</label><input type="text" id="vesselLicense3" class="w-full p-2.5 border rounded-lg"></div>
+                        <div><label class="block font-semibold mb-1">Link GPS Tracking</label><input type="url" id="vesselGpsLink" class="w-full p-2.5 border rounded-lg"></div>
+                        <button type="submit" id="vesselSubmitBtn" class="w-full bg-brandBlue hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition">Lưu Thông Tin Tàu</button>
+                    </form>
+                </div>
+
+                <!-- Danh sách tàu & 3 giấy phép -->
+                <div class="lg:col-span-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-brandBlue"><i class="fas fa-ship mr-2"></i>Danh Sách Hạm Đội Tàu</h2>
+                        <input type="text" id="adminVesselSearch" oninput="renderAdminVessels()" placeholder="Tìm kiếm tàu..." class="p-2 border rounded-lg text-xs w-60 bg-white">
+                    </div>
+                    <div class="overflow-x-auto border rounded-xl bg-white shadow-sm">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-gray-50 uppercase text-gray-500 border-b">
+                                <tr>
+                                    <th class="p-3">Tên & Số Hiệu</th>
+                                    <th class="p-3">Trọng Tải</th>
+                                    <th class="p-3">Trị Giá</th>
+                                    <th class="p-3">Hồ Sơ 3 Giấy Phép</th>
+                                    <th class="p-3 text-right">Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminVesselsTableBody" class="divide-y"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: BẢO DƯỠNG -->
+        <div id="tab-maintenance" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-4 bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                    <h3 id="maintFormTitle" class="font-bold text-gray-800 text-sm mb-4">Thêm Lịch Bảo Dưỡng</h3>
+                    <form id="maintForm" onsubmit="saveMaintenance(event)" class="space-y-3 text-xs">
+                        <input type="hidden" id="maintEditId">
+                        <div><label class="block font-semibold mb-1">Chọn Tàu *</label><select id="maintVesselSelect" required class="w-full p-2.5 border rounded-lg bg-white"></select></div>
+                        <div><label class="block font-semibold mb-1">Nội dung bảo dưỡng *</label><textarea id="maintContent" required rows="3" class="w-full p-2.5 border rounded-lg"></textarea></div>
+                        <div><label class="block font-semibold mb-1">Thời gian *</label><input type="date" id="maintDate" required class="w-full p-2.5 border rounded-lg"></div>
+                        <div><label class="block font-semibold mb-1">Chi phí (VNĐ)</label><input type="number" id="maintCost" class="w-full p-2.5 border rounded-lg"></div>
+                        <button type="submit" id="maintSubmitBtn" class="w-full bg-brandBlue text-white font-bold py-2.5 rounded-lg">Lưu Lịch Bảo Dưỡng</button>
+                    </form>
+                </div>
+                <div class="lg:col-span-8">
+                    <h2 class="text-xl font-bold text-brandBlue mb-4"><i class="fas fa-tools mr-2"></i>Lịch Trình Bảo Dưỡng & Sửa Chữa</h2>
+                    <div class="overflow-x-auto border rounded-xl bg-white shadow-sm">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-gray-50 uppercase text-gray-500 border-b">
+                                <tr><th class="p-3">Tên Tàu</th><th class="p-3">Nội Dung</th><th class="p-3">Thời Gian</th><th class="p-3">Chi Phí</th><th class="p-3 text-right">Thao Tác</th></tr>
+                            </thead>
+                            <tbody id="adminMaintTableBody" class="divide-y"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: THỦY THỦ -->
+        <div id="tab-crew" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-4 bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                    <h3 id="crewFormTitle" class="font-bold text-gray-800 text-sm mb-4">Thêm Thủy Thủ / Thuyền Viên</h3>
+                    <form id="crewForm" onsubmit="saveCrew(event)" class="space-y-3 text-xs">
+                        <input type="hidden" id="crewEditId">
+                        <div><label class="block font-semibold mb-1">Chức danh *</label><select id="crewRole" required class="w-full p-2.5 border rounded-lg"><option value="Thuyền trưởng">Thuyền trưởng</option><option value="Máy trưởng">Máy trưởng</option><option value="Thuyền phó 1">Thuyền phó 1</option><option value="Thủy thủ">Thủy thủ</option></select></div>
+                        <div><label class="block font-semibold mb-1">Họ tên *</label><input type="text" id="crewName" required class="w-full p-2.5 border rounded-lg"></div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div><label class="block font-semibold mb-1">CCCD *</label><input type="text" id="crewCccd" required class="w-full p-2.5 border rounded-lg"></div>
+                            <div><label class="block font-semibold mb-1">SĐT *</label><input type="text" id="crewPhone" required class="w-full p-2.5 border rounded-lg"></div>
+                        </div>
+                        <div><label class="block font-semibold mb-1">Lương (VNĐ)</label><input type="number" id="crewSalary" class="w-full p-2.5 border rounded-lg"></div>
+                        <button type="submit" id="crewSubmitBtn" class="w-full bg-brandBlue text-white font-bold py-2.5 rounded-lg">Lưu Hồ Sơ Thủy Thủ</button>
+                    </form>
+                </div>
+                <div class="lg:col-span-8">
+                    <h2 class="text-xl font-bold text-brandBlue mb-4"><i class="fas fa-id-badge mr-2"></i>Danh Sách Thủy Thủ & Thuyền Viên</h2>
+                    <div class="overflow-x-auto border rounded-xl bg-white shadow-sm">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-gray-50 uppercase text-gray-500 border-b">
+                                <tr><th class="p-3">Họ Tên & Chức Danh</th><th class="p-3">CCCD</th><th class="p-3">Điện Thoại</th><th class="p-3">Lương</th><th class="p-3 text-right">Thao Tác</th></tr>
+                            </thead>
+                            <tbody id="adminCrewTableBody" class="divide-y"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: TÀI SẢN -->
+        <div id="tab-assets" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-4 bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                    <h3 id="assetFormTitle" class="font-bold text-gray-800 text-sm mb-4">Quản Lý Tài Sản Tàu</h3>
+                    <form id="vesselAssetForm" onsubmit="saveVesselAsset(event)" class="space-y-3 text-xs">
+                        <input type="hidden" id="assetEditId">
+                        <div><label class="block font-semibold mb-1">Chọn Tàu *</label><select id="assetVesselSelect" required class="w-full p-2.5 border rounded-lg bg-white"></select></div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div><label class="block font-semibold mb-1">Thân vỏ</label><input type="text" id="assetHull" class="w-full p-2.5 border rounded-lg"></div>
+                            <div><label class="block font-semibold mb-1">Chân vịt</label><input type="text" id="assetPropeller" class="w-full p-2.5 border rounded-lg"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div><label class="block font-semibold mb-1">Máy phụ</label><input type="text" id="assetBackupEngine" class="w-full p-2.5 border rounded-lg"></div>
+                            <div><label class="block font-semibold mb-1">Áo phao</label><input type="text" id="assetLifeJacket" class="w-full p-2.5 border rounded-lg"></div>
+                        </div>
+                        <div><label class="block font-semibold mb-1">Ghi chú thiết bị</label><textarea id="assetNotes" rows="2" class="w-full p-2.5 border rounded-lg"></textarea></div>
+                        <button type="submit" id="assetSubmitBtn" class="w-full bg-brandBlue text-white font-bold py-2.5 rounded-lg">Lưu Tài Sản Tàu</button>
+                    </form>
+                </div>
+                <div class="lg:col-span-8">
+                    <h2 class="text-xl font-bold text-brandBlue mb-4"><i class="fas fa-boxes mr-2"></i>Trang Thiết Bị & Tài Sản</h2>
+                    <div class="overflow-x-auto border rounded-xl bg-white shadow-sm">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-gray-50 uppercase text-gray-500 border-b">
+                                <tr><th class="p-3">Tên Tàu</th><th class="p-3">Vỏ & Chân Vịt</th><th class="p-3">Máy Phụ & Phao</th><th class="p-3 text-right">Thao Tác</th></tr>
+                            </thead>
+                            <tbody id="adminVesselAssetsTableBody" class="divide-y"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: NGUYÊN VẬT LIỆU -->
+        <div id="tab-materials" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-4 bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                    <h3 id="matFormTitle" class="font-bold text-gray-800 text-sm mb-4">Nhập Nhiên Liệu & Vật Tư</h3>
+                    <form id="vesselMaterialForm" onsubmit="saveVesselMaterial(event)" class="space-y-3 text-xs">
+                        <input type="hidden" id="matEditId">
+                        <div><label class="block font-semibold mb-1">Chọn Tàu *</label><select id="matVesselSelect" required class="w-full p-2.5 border rounded-lg bg-white"></select></div>
+                        <div><label class="block font-semibold mb-1">Số lít dầu D.O *</label><input type="number" id="matOilLitres" required class="w-full p-2.5 border rounded-lg"></div>
+                        <div><label class="block font-semibold mb-1">Thành tiền (VNĐ) *</label><input type="number" id="matOilTotal" required class="w-full p-2.5 border rounded-lg"></div>
+                        <div><label class="block font-semibold mb-1">Ngày cấp phát *</label><input type="date" id="matOilDate" required class="w-full p-2.5 border rounded-lg"></div>
+                        <button type="submit" id="matSubmitBtn" class="w-full bg-brandBlue text-white font-bold py-2.5 rounded-lg">Lưu Nguyên Vật Liệu</button>
+                    </form>
+                </div>
+                <div class="lg:col-span-8">
+                    <h2 class="text-xl font-bold text-brandBlue mb-4"><i class="fas fa-gas-pump mr-2"></i>Kho Nhiên Liệu & Nguyên Vật Liệu</h2>
+                    <div class="overflow-x-auto border rounded-xl bg-white shadow-sm">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-gray-50 uppercase text-gray-500 border-b">
+                                <tr><th class="p-3">Tên Tàu</th><th class="p-3">Số Lít Dầu</th><th class="p-3">Thành Tiền</th><th class="p-3">Ngày Cấp</th><th class="p-3 text-right">Thao Tác</th></tr>
+                            </thead>
+                            <tbody id="adminVesselMaterialsTableBody" class="divide-y"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            document.getElementById('btn-tab-' + tabId).classList.add('active');
+            refreshTabData(tabId);
+        }
+
+        function refreshTabData(tabId) {
+            if(tabId === 'ships') renderAdminVessels();
+            if(tabId === 'maintenance') { renderMaintenanceTable(); populateVesselSelects(); }
+            if(tabId === 'crew') renderCrewTable();
+            if(tabId === 'assets') { renderVesselAssetsTable(); populateVesselSelects(); }
+            if(tabId === 'materials') { renderVesselMaterialsTable(); populateVesselSelects(); }
+        }
+
+        function populateVesselSelects() {
+            const vessels = JSON.parse(localStorage.getItem('admin_vessels') || '[]');
+            const options = '<option value="">-- Chọn tàu --</option>' + vessels.map(v => `<option value="${v.id}">${v.name} (${v.code})</option>`).join('');
+            ['maintVesselSelect', 'assetVesselSelect', 'matVesselSelect'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.innerHTML = options;
+            });
+        }
+
+        // --- QUẢN LÝ TÀU & 3 GIẤY PHÉP ---
+        function renderAdminVessels() {
+            let vessels = JSON.parse(localStorage.getItem('admin_vessels') || '[]');
+            if(vessels.length === 0) {
+                vessels = [{ id: 1, name: 'Đại Dương Star 01', code: 'IMO-982173', dwt: 55000, value: '350 Tỷ', license1: 'VR-2026-A1', license2: 'ATHH-9988', license3: 'GPXC-2026-10' }];
+                localStorage.setItem('admin_vessels', JSON.stringify(vessels));
+            }
+            const keyword = (document.getElementById('adminVesselSearch')?.value || '').toLowerCase();
+            const filtered = vessels.filter(v => v.name.toLowerCase().includes(keyword) || v.code.toLowerCase().includes(keyword));
+
+            document.getElementById('adminVesselsTableBody').innerHTML = filtered.map(v => `
+                <tr class="hover:bg-gray-50">
+                    <td class="p-3 font-semibold">${v.name}<br><span class="text-[10px] text-gray-500 font-mono">${v.code}</span></td>
+                    <td class="p-3 text-brandBlue font-bold">${Number(v.dwt || 0).toLocaleString()} Tấn</td>
+                    <td class="p-3">${v.value || '---'}</td>
+                    <td class="p-3 text-[11px] text-gray-700 font-mono space-y-0.5">
+                        <div><strong class="text-blue-600">GP1 (Đăng kiểm):</strong> ${v.license1 || '---'}</div>
+                        <div><strong class="text-blue-600">GP2 (An toàn):</strong> ${v.license2 || '---'}</div>
+                        <div><strong class="text-blue-600">GP3 (Xuất cảng):</strong> ${v.license3 || '---'}</div>
+                    </td>
+                    <td class="p-3 text-right">
+                        <button onclick="editVessel(${v.id})" class="text-brandBlue font-semibold mr-2"><i class="fa-solid fa-pen-to-square"></i> Sửa</button>
+                        <button onclick="deleteVessel(${v.id})" class="text-red-600 font-semibold"><i class="fa-solid fa-trash"></i> Xóa</button>
+                    </td>
+                </tr>
+            `).join('') || `<tr><td colspan="5" class="p-4 text-center text-gray-400">Không tìm thấy tàu phù hợp</td></tr>`;
+        }
+
+        function saveVessel(e) {
+            e.preventDefault();
+            let vessels = JSON.parse(localStorage.getItem('admin_vessels') || '[]');
+            const editId = document.getElementById('vesselEditId').value;
+            const data = {
+                id: editId ? parseInt(editId) : Date.now(),
+                name: document.getElementById('vesselName').value,
+                code: document.getElementById('vesselCode').value,
+                dwt: parseFloat(document.getElementById('vesselDwt').value || 0),
+                value: document.getElementById('vesselValue').value,
+                date: document.getElementById('vesselDate').value,
+                license1: document.getElementById('vesselLicense1').value,
+                license2: document.getElementById('vesselLicense2').value,
+                license3: document.getElementById('vesselLicense3').value,
+                gpsLink: document.getElementById('vesselGpsLink').value
+            };
+            if(editId) {
+                const idx = vessels.findIndex(x => x.id == editId);
+                if(idx !== -1) vessels[idx] = data;
+            } else { vessels.push(data); }
+            localStorage.setItem('admin_vessels', JSON.stringify(vessels));
+            resetVesselForm();
+            renderAdminVessels();
+            alert('Đã lưu thông tin tàu thành công!');
+        }
+
+        function editVessel(id) {
+            const list = JSON.parse(localStorage.getItem('admin_vessels') || '[]');
+            const v = list.find(x => x.id == id);
+            if(!v) return;
+            document.getElementById('vesselEditId').value = v.id;
+            document.getElementById('vesselName').value = v.name || '';
+            document.getElementById('vesselCode').value = v.code || '';
+            document.getElementById('vesselDwt').value = v.dwt || '';
+            document.getElementById('vesselValue').value = v.value || '';
+            document.getElementById('vesselDate').value = v.date || '';
+            document.getElementById('vesselLicense1').value = v.license1 || '';
+            document.getElementById('vesselLicense2').value = v.license2 || '';
+            document.getElementById('vesselLicense3').value = v.license3 || '';
+            document.getElementById('vesselGpsLink').value = v.gpsLink || '';
+            document.getElementById('vesselFormTitle').innerHTML = '<i class="fas fa-edit text-brandBlue mr-1"></i> Cập Nhật Tàu';
+            document.getElementById('vesselSubmitBtn').innerText = 'Cập Nhật Tàu';
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        function resetVesselForm() {
+            document.getElementById('vesselForm').reset();
+            document.getElementById('vesselEditId').value = '';
+            document.getElementById('vesselFormTitle').innerHTML = '<i class="fas fa-plus-circle text-brandBlue mr-1"></i> Thêm Tàu Mới';
+            document.getElementById('vesselSubmitBtn').innerText = 'Lưu Thông Tin Tàu';
+        }
+
+        function deleteVessel(id) {
+            if(!confirm('Bạn có chắc chắn muốn xóa tàu này?')) return;
+            let vessels = JSON.parse(localStorage.getItem('admin_vessels') || '[]');
+            localStorage.setItem('admin_vessels', JSON.stringify(vessels.filter(v => v.id != id)));
+            renderAdminVessels();
+        }
+
+        // --- BẢO DƯỠNG ---
+        function renderMaintenanceTable() {
+            let list = JSON.parse(localStorage.getItem('admin_maintenance') || '[]');
+            const vessels = JSON.parse(localStorage.getItem('admin_vessels') || '[]');
+            document.getElementById('adminMaintTableBody').innerHTML = list.map(m => {
+                const v = vessels.find(x => x.id == m.vesselId);
+                return `<tr class="hover:bg-gray-50"><td class="p-3 font-semibold">${v ? v.name : '---'}</td><td class="p-3">${m.content}</td><td class="p-3">${m.date}</td><td class="p-3 font-bold text-amber-600">${Number(m.cost || 0).toLocaleString()} VNĐ</td><td class="p-3 text-right"><button onclick="deleteMaint(${m.id})" class="text-red-600 font-semibold"><i class="fa-solid fa-trash"></i> Xóa</button></td></tr>`;
+            }).join('') || `<tr><td colspan="5" class="p-4 text-center text-gray-400">Chưa có lịch bảo dưỡng</td></tr>`;
+        }
+        function saveMaintenance(e) {
+            e.preventDefault();
+            let list = JSON.parse(localStorage.getItem('admin_maintenance') || '[]');
+            list.push({ id: Date.now(), vesselId: parseInt(document.getElementById('maintVesselSelect').value), content: document.getElementById('maintContent').value, date: document.getElementById('maintDate').value, cost: parseFloat(document.getElementById('maintCost').value || 0) });
+            localStorage.setItem('admin_maintenance', JSON.stringify(list));
+            document.getElementById('maintForm').reset();
+            renderMaintenanceTable();
+            alert('Đã lưu lịch bảo dưỡng!');
+        }
+        function deleteMaint(id) {
+            let list = JSON.parse(localStorage.getItem('admin_maintenance') || '[]');
+            localStorage.setItem('admin_maintenance', JSON.stringify(list.filter(x => x.id != id)));
+            renderMaintenanceTable();
+        }
+
+        // --- THỦY THỦ ---
+        function renderCrewTable() {
+            let list = JSON.parse(localStorage.getItem('admin_crew') || '[]');
+            if(list.length === 0) {
+                list = [{ id: 1, role: 'Thuyền trưởng', name: 'Nguyễn Văn Hùng', cccd: '036085001234', phone: '0908123456', salary: 35000000 }];
+                localStorage.setItem('admin_crew', JSON.stringify(list));
+            }
+            document.getElementById('adminCrewTableBody').innerHTML = list.map(c => `
+                <tr class="hover:bg-gray-50"><td class="p-3 font-semibold">${c.name}<br><span class="text-[10px] text-gray-500">${c.role}</span></td><td class="p-3">${c.cccd}</td><td class="p-3">${c.phone}</td><td class="p-3 font-bold text-brandBlue">${Number(c.salary || 0).toLocaleString()} VNĐ</td><td class="p-3 text-right"><button onclick="deleteCrew(${c.id})" class="text-red-600 font-semibold"><i class="fa-solid fa-trash"></i> Xóa</button></td></tr>
+            `).join('');
+        }
+        function saveCrew(e) {
+            e.preventDefault();
+            let list = JSON.parse(localStorage.getItem('admin_crew') || '[]');
+            list.push({ id: Date.now(), role: document.getElementById('crewRole').value, name: document.getElementById('crewName').value, cccd: document.getElementById('crewCccd').value, phone: document.getElementById('crewPhone').value, salary: parseFloat(document.getElementById('crewSalary').value || 0) });
+            localStorage.setItem('admin_crew', JSON.stringify(list));
+            document.getElementById('crewForm').reset();
+            renderCrewTable();
+            alert('Đã lưu hồ sơ thủy thủ!');
+        }
+        function deleteCrew(id) {
+            let list = JSON.parse(localStorage.getItem('admin_crew') || '[]');
+            localStorage.setItem('admin_crew', JSON.stringify(list.filter(x => x.id != id)));
+            renderCrewTable();
+        }
+
+        // --- TÀI SẢN TÀU ---
+        function renderVesselAssetsTable() {
+            let assets = JSON.parse(localStorage.getItem('admin_vessel_assets') || '[]');
+            const vessels = JSON.parse(localStorage.getItem('admin_vessels') || '[]');
+            document.getElementById('adminVesselAssetsTableBody').innerHTML = assets.map(a => {
+                const v = vessels.find(x => x.id == a.vesselId);
+                return `<tr class="hover:bg-gray-50"><td class="p-3 font-semibold">${v ? v.name : '---'}</td><td class="p-3">Vỏ: ${a.hull || '---'}<br>Chân vịt: ${a.propeller || '---'}</td><td class="p-3">Máy: ${a.backupEngine || '---'}<br>Phao: ${a.lifeJacket || '---'}</td><td class="p-3 text-right"><button onclick="deleteAsset(${a.id})" class="text-red-600 font-semibold"><i class="fa-solid fa-trash"></i> Xóa</button></td></tr>`;
+            }).join('') || `<tr><td colspan="4" class="p-4 text-center text-gray-400">Chưa có dữ liệu tài sản</td></tr>`;
+        }
+        function saveVesselAsset(e) {
+            e.preventDefault();
+            let assets = JSON.parse(localStorage.getItem('admin_vessel_assets') || '[]');
+            assets.push({ id: Date.now(), vesselId: parseInt(document.getElementById('assetVesselSelect').value), hull: document.getElementById('assetHull').value, propeller: document.getElementById('assetPropeller').value, backupEngine: document.getElementById('assetBackupEngine').value, lifeJacket: document.getElementById('assetLifeJacket').value, notes: document.getElementById('assetNotes').value });
+            localStorage.setItem('admin_vessel_assets', JSON.stringify(assets));
+            document.getElementById('vesselAssetForm').reset();
+            renderVesselAssetsTable();
+            alert('Đã lưu tài sản tàu!');
+        }
+        function deleteAsset(id) {
+            let assets = JSON.parse(localStorage.getItem('admin_vessel_assets') || '[]');
+            localStorage.setItem('admin_vessel_assets', JSON.stringify(assets.filter(x => x.id != id)));
+            renderVesselAssetsTable();
+        }
+
+        // --- NGUYÊN VẬT LIỆU ---
+        function renderVesselMaterialsTable() {
+            let mats = JSON.parse(localStorage.getItem('admin_vessel_materials') || '[]');
+            const vessels = JSON.parse(localStorage.getItem('admin_vessels') || '[]');
+            document.getElementById('adminVesselMaterialsTableBody').innerHTML = mats.map(m => {
+                const v = vessels.find(x => x.id == m.vesselId);
+                return `<tr class="hover:bg-gray-50"><td class="p-3 font-semibold">${v ? v.name : '---'}</td><td class="p-3">${Number(m.litres || 0).toLocaleString()} Lít</td><td class="p-3 font-bold text-brandBlue">${Number(m.total || 0).toLocaleString()} VNĐ</td><td class="p-3">${m.date}</td><td class="p-3 text-right"><button onclick="deleteMaterial(${m.id})" class="text-red-600 font-semibold"><i class="fa-solid fa-trash"></i> Xóa</button></td></tr>`;
+            }).join('') || `<tr><td colspan="5" class="p-4 text-center text-gray-400">Chưa có dữ liệu nguyên vật liệu</td></tr>`;
+        }
+        function saveVesselMaterial(e) {
+            e.preventDefault();
+            let mats = JSON.parse(localStorage.getItem('admin_vessel_materials') || '[]');
+            mats.push({ id: Date.now(), vesselId: parseInt(document.getElementById('matVesselSelect').value), litres: parseFloat(document.getElementById('matOilLitres').value || 0), total: parseFloat(document.getElementById('matOilTotal').value || 0), date: document.getElementById('matOilDate').value });
+            localStorage.setItem('admin_vessel_materials', JSON.stringify(mats));
+            document.getElementById('vesselMaterialForm').reset();
+            renderVesselMaterialsTable();
+            alert('Đã lưu nhiên liệu!');
+        }
+        function deleteMaterial(id) {
+            let mats = JSON.parse(localStorage.getItem('admin_vessel_materials') || '[]');
+            localStorage.setItem('admin_vessel_materials', JSON.stringify(mats.filter(x => x.id != id)));
+            renderVesselMaterialsTable();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderAdminVessels();
+        });
+    </script>
+</body>
+</html>
